@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema de Indicadores</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+    .linea { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .lado { display: flex; flex-wrap: wrap; width: 48%; }
+    .numero { margin: 5px; border: 1px solid #ccc; padding: 5px; background: white; }
+    .locaciones { display: flex; justify-content: space-between; margin-top: 4px; }
+    .locacion { width: 16px; height: 16px; border-radius: 50%; background: gray; }
+    .rojo { background: red; }
+    .verde { background: green; }
+  </style>
+</head>
+<body>
+  <h1>Sistema de 14 líneas</h1>
+
+  <!-- Generar 14 líneas -->
+  <div id="sistema">
+    <!-- Aquí se generarán dinámicamente las líneas con JavaScript -->
+  </div>
+
+  <script>
+    function crearLocaciones() {
+      const letras = ['A', 'B', 'C', 'D', 'E'];
+      return letras.map(letra => `<div class="locacion" title="${letra}"></div>`).join('');
+    }
+
+    function generarNumero(numero) {
+      return `
+        <div class="numero">
+          ${numero}
+          <div class="locaciones">
+            ${crearLocaciones()}
+          </div>
+        </div>`;
+    }
+
+    function generarLinea(lineaIndex) {
+      const pares = [];
+      const impares = [];
+      for (let n = 1; n <= 90; n++) {
+        if (n % 2 === 0) pares.push(generarNumero(n));
+        else impares.push(generarNumero(n));
+      }
+      return `
+        <div class="linea">
+          <div class="lado">${pares.join('')}</div>
+          <div class="lado">${impares.join('')}</div>
+        </div>`;
+    }
+
+    const sistema = document.getElementById("sistema");
+    for (let i = 0; i < 14; i++) {
+      sistema.innerHTML += generarLinea(i);
+    }
+  </script>
+</body>
+</html>
+<script>
+  // Agregar comportamiento interactivo a cada locación
+  document.addEventListener("click", function(event) {
+    if (event.target.classList.contains("locacion")) {
+      if (event.target.classList.contains("rojo")) {
+        event.target.classList.remove("rojo");
+        event.target.classList.add("verde");
+      } else if (event.target.classList.contains("verde")) {
+        event.target.classList.remove("verde");
+      } else {
+        event.target.classList.add("rojo");
+      }
+    }
+  });
+</script>
+<script>
+  // Función para obtener el estado guardado
+  function cargarEstado() {
+    const estadoGuardado = JSON.parse(localStorage.getItem("estadoLocaciones")) || {};
+    for (const id in estadoGuardado) {
+      const locacion = document.getElementById(id);
+      if (locacion) {
+        locacion.classList.remove("rojo", "verde");
+        locacion.classList.add(estadoGuardado[id]);
+      }
+    }
+  }
+
+  // Función para guardar estado actualizado
+  function guardarEstado() {
+    const estadoLocaciones = {};
+    document.querySelectorAll(".locacion").forEach(loc => {
+      const color = loc.classList.contains("rojo") ? "rojo"
+                   : loc.classList.contains("verde") ? "verde"
+                   : "";
+      if (color) {
+        estadoLocaciones[loc.id] = color;
+      }
+    });
+    localStorage.setItem("estadoLocaciones", JSON.stringify(estadoLocaciones));
+  }
+
+  // Ciclo de colores al hacer clic
+  document.addEventListener("click", function(event) {
+    if (event.target.classList.contains("locacion")) {
+      const el = event.target;
+      el.classList.remove("rojo", "verde");
+
+      if (!el.dataset.color || el.dataset.color === "") {
+        el.classList.add("rojo");
+        el.dataset.color = "rojo";
+      } else if (el.dataset.color === "rojo") {
+        el.classList.add("verde");
+        el.dataset.color = "verde";
+      } else {
+        el.dataset.color = "";
+      }
+
+      guardarEstado(); // Guardar cada vez que cambie
+    }
+  });
+
+  // Genera ID único para cada locación después de que se cargue la estructura
+  window.addEventListener("DOMContentLoaded", () => {
+    let contador = 0;
+    document.querySelectorAll(".locacion").forEach(loc => {
+      loc.id = "locacion-" + contador++;
+    });
+    cargarEstado(); // Restaurar colores guardados
+  });
+</script>
